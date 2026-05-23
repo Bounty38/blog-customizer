@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 import {
@@ -18,6 +18,7 @@ import { Separator } from 'src/ui/separator';
 import { Text } from 'src/ui/text';
 
 import styles from './ArticleParamsForm.module.scss';
+import { useCloseOnOutsideClickOrEsc } from 'src/hooks/useCloseOnOutsideClickOrEsc';
 
 type ArticleParamsFormProps = {
 	articleState: ArticleStateType;
@@ -28,33 +29,18 @@ export const ArticleParamsForm = ({
 	articleState,
 	onApply,
 }: ArticleParamsFormProps) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [formState, setFormState] = useState<ArticleStateType>(articleState);
 	const rootRef = useRef<HTMLDivElement>(null);
 
-	useEffect(() => {
-		if (!isOpen) {
-			return;
-		}
-
-		const handleOutsideClick = (event: MouseEvent) => {
-			if (
-				event.target instanceof Node &&
-				!rootRef.current?.contains(event.target)
-			) {
-				setIsOpen(false);
-			}
-		};
-
-		document.addEventListener('mousedown', handleOutsideClick);
-
-		return () => {
-			document.removeEventListener('mousedown', handleOutsideClick);
-		};
-	}, [isOpen]);
+	useCloseOnOutsideClickOrEsc({
+		isOpenElement: isFormOpen,
+		elementRef: rootRef as React.RefObject<HTMLElement>,
+		onClose: () => setIsFormOpen(false),
+	});
 
 	const handleToggleOpen = () => {
-		setIsOpen((currentIsOpen) => !currentIsOpen);
+		setIsFormOpen((current) => !current);
 	};
 
 	const handleChange = <Key extends keyof ArticleStateType>(
@@ -80,10 +66,10 @@ export const ArticleParamsForm = ({
 
 	return (
 		<div ref={rootRef}>
-			<ArrowButton isOpen={isOpen} onClick={handleToggleOpen} />
+			<ArrowButton isOpen={isFormOpen} onClick={handleToggleOpen} />
 			<aside
 				className={clsx(styles.container, {
-					[styles.container_open]: isOpen,
+					[styles.container_open]: isFormOpen,
 				})}>
 				<form
 					className={styles.form}
